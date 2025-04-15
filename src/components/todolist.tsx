@@ -21,9 +21,7 @@ type Task = {
 
 export default function TodoList() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [timeRemaining, setTimeRemaining] = useState<{ [key: string]: string }>(
-    {}
-  );
+  const [timeRemaining, setTimeRemaining] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -65,7 +63,7 @@ export default function TodoList() {
 
   const addTask = async (): Promise<void> => {
     const { value: formValues } = await Swal.fire({
-      title: 'Tambahkan tugas baru',
+      title: '°❀⋆Tambah tugas baru･°❀',
       html:
         '<input id="swal-input1" class="swal2-input" placeholder="Nama tugas">' +
         '<input id="swal-input2" type="datetime-local" class="swal2-input">',
@@ -92,6 +90,36 @@ export default function TodoList() {
     }
   };
 
+  const editTask = async (task: Task): Promise<void> => {
+    const { value: formValues } = await Swal.fire({
+      title: '🌸˚˖⋆ Edit tugas🌸˚˖⋆',
+      html:
+        `<input id="swal-input1" class="swal2-input" value="${task.text}" placeholder="Nama tugas">` +
+        `<input id="swal-input2" type="datetime-local" class="swal2-input" value="${task.deadline.slice(0, 16)}">`,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Simpan',
+      cancelButtonText: 'Batal',
+      preConfirm: () => {
+        return [
+          (document.getElementById('swal-input1') as HTMLInputElement)?.value,
+          (document.getElementById('swal-input2') as HTMLInputElement)?.value,
+        ];
+      },
+    });
+
+    if (formValues && formValues[0] && formValues[1]) {
+      const updatedTask = { ...task, text: formValues[0], deadline: formValues[1] };
+      const taskRef = doc(db, 'tasks', task.id);
+      await updateDoc(taskRef, {
+        text: updatedTask.text,
+        deadline: updatedTask.deadline,
+      });
+
+      setTasks(tasks.map(t => t.id === task.id ? updatedTask : t));
+    }
+  };
+
   const toggleTask = async (id: string): Promise<void> => {
     const updatedTasks = tasks.map((task) =>
       task.id === id ? { ...task, completed: !task.completed } : task
@@ -109,66 +137,75 @@ export default function TodoList() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-4 bg-white shadow-md rounded-lg">
-      <h1 className="text-2xl text-emerald-500 font-bold mb-4">To-Do List</h1>
-      <div className="flex justify-center mb-4">
-        <button
-          onClick={addTask}
-          className="bg-slate-500 text-white px-4 py-2 rounded"
-        >
-          Tambah Tugas
-        </button>
-      </div>
-      <ul>
-        <AnimatePresence>
-          {tasks.map((task) => {
-            const timeLeft = calculateTimeRemaining(task.deadline);
-            const isExpired = timeLeft === 'Waktu habis!';
-            const taskColor = task.completed
-              ? 'bg-green-200'
-              : isExpired
-              ? 'bg-red-200'
-              : 'bg-yellow-200';
+    <div
+      className="min-h-screen bg-pink-50 bg-[url('/beach-pattern.svg')] bg-cover bg-center flex items-center justify-center"
+    >
+      <div className="max-w-md w-full p-6 bg-white/70 shadow-2xl backdrop-blur-xl rounded-3xl border border-pink-200">
+        <h1 className="text-4xl font-extrabold text-pink-500 text-center mb-4">Todolist 🩰˚˖𓍢</h1>
+        <div className="flex justify-center mb-4">
+          <button
+            onClick={addTask}
+            className="bg-gradient-to-r from-pink-400 via-pink-300 to-yellow-300 hover:from-pink-500 hover:to-yellow-400 text-white font-bold px-5 py-2 rounded-full shadow-md transition-all"
+          >
+            + Tambah Tugas
+          </button>
+        </div>
+        <ul>
+          <AnimatePresence>
+            {tasks.map((task) => {
+              const timeLeft = calculateTimeRemaining(task.deadline);
+              const isExpired = timeLeft === 'Waktu habis!';
+              const taskColor = task.completed
+                ? 'bg-green-100'
+                : isExpired
+                ? 'bg-red-100'
+                : 'bg-yellow-100';
 
-            return (
-              <motion.li
-                key={task.id}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className={`flex flex-col justify-between p-2 border-b rounded-lg ${taskColor}`}
-              >
-                <div className="flex justify-between items-center">
-                  <span
-                    onClick={() => toggleTask(task.id)}
-                    className={`cursor-pointer transition-500 ${
-                      task.completed
-                        ? 'line-through text-gray-500'
-                        : 'font-semibold text-gray-700'
-                    }`}
-                  >
-                    {task.text}
-                  </span>
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    className="text-white p-1 rounded bg-red-600 hover:bg-red-800"
-                  >
-                    Hapus
-                  </button>
-                </div>
-                <p className="text-sm text-gray-700">
-                  Deadline: {new Date(task.deadline).toLocaleString()}
-                </p>
-                <p className="text-xs font-semibold text-gray-700">
-                  ⏳ {timeRemaining[task.id] || 'Menghitung...'}
-                </p>
-              </motion.li>
-            );
-          })}
-        </AnimatePresence>
-      </ul>
+              return (
+                <motion.li
+                  key={task.id}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className={`flex flex-col justify-between p-4 mb-3 rounded-2xl shadow-md ${taskColor}`}
+                >
+                  <div className="flex justify-between items-center gap-2">
+                    <span
+                      onClick={() => toggleTask(task.id)}
+                      className={`cursor-pointer flex-1 ${
+                        task.completed
+                          ? 'line-through text-gray-400'
+                          : 'font-medium text-gray-800'
+                      }`}
+                    >
+                      {task.text}
+                    </span>
+                    <button
+                      onClick={() => editTask(task)}
+                      className="text-white bg-blue-400 hover:bg-blue-600 px-3 py-1 text-xs rounded-full"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteTask(task.id)}
+                      className="text-white bg-pink-500 hover:bg-pink-700 px-3 py-1 text-xs rounded-full"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    📅 Deadline: {new Date(task.deadline).toLocaleString()}
+                  </p>
+                  <p className="text-xs font-semibold text-pink-500">
+                    ⏳ {timeRemaining[task.id] || 'Menghitung...'}
+                  </p>
+                </motion.li>
+              );
+            })}
+          </AnimatePresence>
+        </ul>
+      </div>
     </div>
   );
 }
-
